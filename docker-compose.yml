@@ -6,6 +6,7 @@ volumes:
   dnscrypt_config:
   settings:
   spotifycache:
+  bluetoothcache: 
  
 
 services:
