@@ -5,6 +5,8 @@ volumes:
   dnsmasq_config:
   dnscrypt_config:
   settings:
+  spotifycache:
+ 
 
 services:
   pihole:
@@ -35,14 +37,70 @@ services:
       - 8080:8080
     volumes:
       - 'settings:/usr/src/app/settings'
-  scheduler:
-    restart: always
-    build: ./scheduler
+  # scheduler:
+  #   restart: always
+  #   build: ./scheduler
+  #   privileged: true
+  # photos:
+  #   privileged: true
+  #   restart: always
+  #   build: ./photos
+  #   ports:
+  #     - "8888:8888"
+  bluetooth-audio:
+    build: ./balena-sound/bluetooth-audio
+    restart: on-failure
+    network_mode: host
     privileged: true
-  photos:
+    labels:
+      io.balena.features.dbus: 1
+    volumes:
+      - bluetoothcache:/var/cache/bluetooth
+      - snapcast:/var/cache/snapcast
+  airplay:
+    build: ./balena-sound/airplay
+    restart: on-failure
+    network_mode: host
     privileged: true
-    restart: always
-    build: ./photos
+    labels:
+      io.balena.features.dbus: 1
+    volumes:
+      - snapcast:/var/cache/snapcast
+  spotify:
+    build: ./balena-sound/spotify
+    restart: on-failure
+    network_mode: host
+    privileged: true
+    volumes:
+      - spotifycache:/var/cache/raspotify
+      - snapcast:/var/cache/snapcast
+  fleet-supervisor:
+    build: ./balena-sound/fleet-supervisor
+    restart: on-failure
+    network_mode: host
+    privileged: true
     ports:
-      - "8888:8888"
-     
+      - 3000:3000
+    labels:
+      io.balena.features.supervisor-api: 1
+  snapcast-server:
+    build: 
+      context: ./balena-sound/snapcast-server
+      args:
+        SNAPCAST_VERSION: 0.19.0
+    restart: on-failure
+    ports:
+      - 1704:1704
+      - 1705:1705
+    volumes:
+      - snapcast:/var/cache/snapcast
+  snapcast-client:
+    build: 
+      context: ./balena-sound/snapcast-client
+      args:
+        SNAPCAST_VERSION: 0.19.0
+    restart: on-failure 
+    network_mode: host 
+    privileged: true
+    volumes:
+      - snapcast:/var/cache/snapcast
