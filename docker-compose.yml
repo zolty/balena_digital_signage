@@ -102,8 +102,20 @@ services:
     volumes:
       - snapcast:/var/cache/snapcast
 
-  telegraf:
+  telegraf-metrics:
     build: ./balena-telegraf
+    pid: "host"
+    network_mode: "host"
+    privileged: true
+    labels:
+      io.resin.features.balena-socket: '1'
+    environment:
+      - INFLUX_URL=http://192.168.1.69:8086
+      - INFLUX_DB=telegraf
+      - INFLUX_USER=telegraf
+      - INFLUX_PASSWORD=secretpassword
+  telegraf-pihole: 
+    build: ./balena-telegraf/pi_hole_monitor
     pid: "host"
     network_mode: "host"
     privileged: true
